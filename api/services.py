@@ -1,15 +1,14 @@
 """Роль «Стійкість». Уся бухгалтерія ресурсу — тут, а не у views.
 
-    def confirm_order(order_id: int, user) -> Order: ...
-    def cancel_order(order_id: int, user) -> Order: ...
+    def confirm_order(order_id: int, user) -> LoanRequest: ...
+    def cancel_order(order_id: int, user) -> LoanRequest: ...
 
 Головне правило дня: ресурс зайнятий тоді й лише тоді, коли заявка в стані
-`confirmed`. Кожна функція — одна `transaction.atomic()` і умовні UPDATE
-(див. регламент, етап 2). Помилки віддавайте винятками, а views перетворять
-їх на 400 / 409.
+`confirmed`. Кожна функція — одна `transaction.atomic()` і умовні UPDATE: стан
+і залишок міняє сама база, між читанням і записом нема вікна для гонки.
+Помилки — винятками DRF: `Conflict` (409) і `ValidationError` (400).
 """
 
-"""Роль «Стійкість». Уся бухгалтерія ресурсу — тут, а не у views."""
 from django.db import transaction
 from django.db.models import F
 from rest_framework.exceptions import APIException, ValidationError
