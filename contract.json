@@ -2,12 +2,12 @@
   "base_url": "http://127.0.0.1:8000",
   "token_url": "/api/v1/auth/token/",
   "items": "/api/v1/books/",
-  "orders": "/api/v1/rentals/",
+  "orders": "/api/v1/loans/",
   "item_field": "book",
   "qty_field": "quantity",
   "left_field": "available",
   "order_extra": {},
-  "race_item": 0,
+  "race_item": 1000,
   "users": {
     "attacker1": "attack-pass-1",
     "attacker2": "attack-pass-2"

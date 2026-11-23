@@ -6,11 +6,26 @@
 Атакувальник клонує ваш репозиторій на тегу `attack` і запускає саме ці дві команди,
 тож усе, без чого атака неможлива, має створюватися тут.
 """
+
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
+from api.models import Book
+
 # Ті самі паролі — у contract.json.
 ATTACKERS = {"attacker1": "attack-pass-1", "attacker2": "attack-pass-2"}
+
+# Фіксований id елемента для гонки: його значення йде в contract.json як race_item.
+RACE_ITEM_ID = 1000
+REGULAR_STOCK = 50
+
+REGULAR_BOOKS = [
+    ("Кобзар", "Тарас Шевченко"),
+    ("Лісова пісня", "Леся Українка"),
+    ("Тіні забутих предків", "Михайло Коцюбинський"),
+    ("Захар Беркут", "Іван Франко"),
+    ("Intermezzo", "Михайло Коцюбинський"),
+]
 
 
 class Command(BaseCommand):
@@ -23,10 +38,21 @@ class Command(BaseCommand):
             user.set_password(password)
             user.save()
 
-        # TODO (Моделі), через update_or_create, щоб повторний запуск відновлював стан:
-        #   1. кілька звичайних елементів каталогу із залишком 50;
-        #   2. один елемент для гонки із залишком рівно 1 — його id іде
-        #      в contract.json як "race_item".
-        # Заявки attacker2 створювати не треба: скрипт атаки зробить це сам.
+        # update_or_create: повторний запуск відновлює залишок до початкового.
+        for title, author in REGULAR_BOOKS:
+            Book.objects.update_or_create(
+                title=title,
+                defaults={"author": author, "available": REGULAR_STOCK},
+            )
 
-        self.stdout.write(self.style.SUCCESS("Готово: attacker1, attacker2, каталог."))
+        # Елемент для гонки: залишок рівно 1, id фіксований -> race_item у contract.json.
+        Book.objects.update_or_create(
+            pk=RACE_ITEM_ID,
+            defaults={"title": "Книга для гонки", "author": "Автор", "available": 1},
+        )
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Готово: attacker1, attacker2, каталог. race_item = {RACE_ITEM_ID}"
+            )
+        )
