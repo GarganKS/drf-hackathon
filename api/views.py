@@ -2,21 +2,15 @@
 викликають функції з services.py і нічого не рахують самі."""
 from django.db import transaction
 from django.db.models import ProtectedError
-from rest_framework import status, viewsets
+from rest_framework import viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import APIException
-from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from . import services
 from .models import Book, LoanRequest
+from .permissions import IsAdminOrReadOnly, IsOrderOwner, owner_queryset
 from .serializers import BookSerializer, LoanRequestSerializer
-
-
-class Conflict(APIException):
-    status_code = status.HTTP_409_CONFLICT
-    default_detail = "Операція неможлива в поточному стані."
-    default_code = "conflict"
+from .services import Conflict
 
 
 class BookViewSet(viewsets.ModelViewSet):
@@ -24,11 +18,7 @@ class BookViewSet(viewsets.ModelViewSet):
 
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-
-    def get_permissions(self):
-        if self.request.method in SAFE_METHODS:
-            return [AllowAny()]
-        return [IsAdminUser()]
+    permission_classes = [IsAdminOrReadOnly]
 
     def destroy(self, request, *args, **kwargs):
         try:
@@ -41,12 +31,14 @@ class LoanRequestViewSet(viewsets.ModelViewSet):
     """Заявки: лише з токеном і лише свої."""
 
     serializer_class = LoanRequestSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsOrderOwner]
 
     def get_queryset(self):
-        # Чужі заявки просто не існують для користувача: список порожній від них,
+        # Чужі заявки просто не існують для користувача: список без них,
         # а detail/PATCH/DELETE/confirm чужої дають 404.
-        return LoanRequest.objects.filter(owner=self.request.user).select_related("book")
+        return owner_queryset(
+            LoanRequest.objects.select_related("book"), self.request.user
+        )
 
     def perform_create(self, serializer):
         # Власник і стан — лише сервером; значення з тіла ігноруються.
