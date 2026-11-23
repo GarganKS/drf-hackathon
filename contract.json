@@ -1,9 +1,9 @@
 {
   "base_url": "http://127.0.0.1:8000",
   "token_url": "/api/v1/auth/token/",
-  "items": "/api/v1/bikes/",
+  "items": "/api/v1/books/",
   "orders": "/api/v1/rentals/",
-  "item_field": "bike",
+  "item_field": "book",
   "qty_field": "quantity",
   "left_field": "available",
   "order_extra": {},
