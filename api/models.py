@@ -6,13 +6,18 @@
   зі значеннями рівно `draft` / `confirmed` / `cancelled`;
 - `CheckConstraint`, що залишок не від'ємний, — страхувальна сітка, а не головний захист.
 """
+
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
+
+
 class Book(models.Model):
     title = models.CharField(max_length=200)
     author = models.CharField(max_length=200)
     available = models.PositiveIntegerField()
+
+
 class Meta:
     ordering = ["id"]
     constraints = [
@@ -22,21 +27,26 @@ class Meta:
         ),
     ]
 
+
 def __str__(self):
     return self.title
+
+
 class LoanRequest(models.Model):
     class Status(models.TextChoices):
         DRAFT = "draft", "Чернетка"
         CONFIRMED = "confirmed", "Підтверджено"
         CANCELLED = "cancelled", "Скасовано"
-book = models.ForeignKey(Book, on_delete=models.PROTECT)
-owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
-quantity = models.PositiveIntegerField()
-status = models.CharField(
-    max_length=9,
-    choices=Status.choices,
-    default=Status.DRAFT,
-)
+
+    book = models.ForeignKey(Book, on_delete=models.PROTECT)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    quantity = models.PositiveIntegerField()
+    status = models.CharField(
+        max_length=9,
+        choices=Status.choices,
+        default=Status.DRAFT,
+    )
+
 
 class Meta:
     ordering = ["id"]
