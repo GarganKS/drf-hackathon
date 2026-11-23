@@ -17,19 +17,17 @@ class Book(models.Model):
     author = models.CharField(max_length=200)
     available = models.PositiveIntegerField()
 
+    class Meta:
+        ordering = ["id"]
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(available__gte=0),
+                name="book_available_nonnegative",
+            ),
+        ]
 
-class Meta:
-    ordering = ["id"]
-    constraints = [
-        models.CheckConstraint(
-            condition=Q(available__gte=0),
-            name="book_available_nonnegative",
-        ),
-    ]
-
-
-def __str__(self):
-    return self.title
+    def __str__(self):
+        return self.title
 
 
 class LoanRequest(models.Model):
@@ -47,16 +45,15 @@ class LoanRequest(models.Model):
         default=Status.DRAFT,
     )
 
-
-class Meta:
-    ordering = ["id"]
-    constraints = [
-        models.CheckConstraint(
-            condition=Q(quantity__gte=1),
-            name="loan_quantity_positive",
-        ),
-        models.CheckConstraint(
-            condition=Q(status__in=["draft", "confirmed", "cancelled"]),
-            name="loan_status_valid",
-        ),
-    ]
+    class Meta:
+        ordering = ["id"]
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(quantity__gte=1),
+                name="loan_quantity_positive",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=["draft", "confirmed", "cancelled"]),
+                name="loan_status_valid",
+            ),
+        ]
